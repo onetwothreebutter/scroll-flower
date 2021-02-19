@@ -43,7 +43,7 @@ const addEmptyImgToPage = index => {
     const newImg = document.createElement('img');
     newImg.dataset.imageIndex = index;
     newImg.dataset.originalSrc = imageURL(index);
-    if(index === 1) {
+    if(index === 0) {
         newImg.classList.add(ACTIVE_CLASS);
     }
     document.body.appendChild(newImg);
@@ -55,15 +55,20 @@ const loadImageAtIndex = index => {
 
 
 
-for(let i = 0; i <= TOTAL_IMAGES; i += 1) {
+for(let i = 0; i <= TOTAL_IMAGES; i += 5) {
     addEmptyImgToPage(i);
     loadImageAtIndex(i);
 }
 
-
+let retries = 0;
 const updateImage = (index) => {
     const activeImage = document.querySelector('.active');
     const imageToUpdate = document.querySelector(`[data-image-index="${index}"]`);
+    if (!imageToUpdate) {
+        retries += 1;
+        return retries < 100 ? updateImage(index + 1) : false;
+    }
+    retries = 0;
     activeImage.classList.remove(ACTIVE_CLASS);
     imageToUpdate.classList.add(ACTIVE_CLASS);
 }
@@ -79,9 +84,9 @@ window.addEventListener('scroll', () => {
         Math.ceil(scrollFraction * frameCount)
     );
 
-    const tempFrameIndex = frameIndex > 1363 ? 1363 : frameIndex
-    console.log( 'frameIndex', tempFrameIndex);
+    const everyNthFrame = 5 * Math.round(frameIndex / 5);
+    console.log( 'frameIndex', everyNthFrame);
 
-    requestAnimationFrame(() => updateImage(tempFrameIndex));
+    requestAnimationFrame(() => updateImage(everyNthFrame));
 });
 

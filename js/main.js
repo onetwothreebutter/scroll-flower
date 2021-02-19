@@ -39,14 +39,16 @@ const imageURL = (index) => {
         `/scroll-flower${baseURL}` : baseURL;
 }
 
+const imageContainer = document.querySelector('.image-container');
 const addEmptyImgToPage = index => {
     const newImg = document.createElement('img');
     newImg.dataset.imageIndex = index;
     newImg.dataset.originalSrc = imageURL(index);
-    if(index === 1) {
+    if(index === 0) {
         newImg.classList.add(ACTIVE_CLASS);
     }
-    document.body.appendChild(newImg);
+
+    imageContainer.appendChild(newImg);
 }
 
 const loadImageAtIndex = index => {
@@ -55,7 +57,7 @@ const loadImageAtIndex = index => {
 
 
 
-for(let i = 0; i <= TOTAL_IMAGES; i += 1) {
+for(let i = 0; i <= TOTAL_IMAGES; i += 5) {
     addEmptyImgToPage(i);
     loadImageAtIndex(i);
 }
@@ -78,8 +80,9 @@ window.addEventListener('scroll', () => {
         frameCount - 1,
         Math.ceil(scrollFraction * frameCount)
     );
-    console.log( 'frameIndex', frameIndex);
+    const evenFrameIndex = 5 * Math.round(frameIndex / 5);
+    console.log( 'frameIndex', evenFrameIndex);
 
-    requestAnimationFrame(() => updateImage(frameIndex));
+    requestAnimationFrame(() => updateImage(evenFrameIndex));
 });
 

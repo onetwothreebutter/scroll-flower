@@ -78,8 +78,10 @@ window.addEventListener('scroll', () => {
         frameCount - 1,
         Math.ceil(scrollFraction * frameCount)
     );
-    console.log( 'frameIndex', frameIndex);
 
-    requestAnimationFrame(() => updateImage(frameIndex));
+    const tempFrameIndex = frameIndex > 1363 ? 1363 : frameIndex
+    console.log( 'frameIndex', tempFrameIndex);
+
+    requestAnimationFrame(() => updateImage(tempFrameIndex));
 });
 

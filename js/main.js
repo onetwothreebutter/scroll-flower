@@ -35,7 +35,7 @@ const ACTIVE_CLASS = 'active';
 
 const imageURL = (index) => {
     const baseURL = `/images/Daffodil-34826${index.toString().padStart(4, '0')}.jpg`;
-    const netlifyParams = `?nf_resize=fit&w=${window.innerWidth}`;
+    const netlifyParams = `?nf_resize=fit&w=1920`;
     return (window.location.href.includes('localhost')) ?
         `/scroll-flower${baseURL}` : `${baseURL}${netlifyParams}`;
 }

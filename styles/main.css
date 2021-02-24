@@ -3,6 +3,10 @@ body {
     height: 500vh;
 }
 
+img {
+    width: 1920px;
+}
+
 canvas {
     position: fixed;
     left: 50%;

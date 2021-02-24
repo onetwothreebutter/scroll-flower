@@ -2,36 +2,11 @@
  * main.js
  */
 
-// Load up the web worker
-const ImageLoaderWorker = new Worker('js/workers/image-loader.worker.js')
+const html = document.documentElement;
+const canvas = document.getElementById("hero-lightpass");
+const context = canvas.getContext("2d");
 
-
-ImageLoaderWorker.addEventListener('message', event => {
-    // Grab the message data from the event
-    const imageData = event.data
-
-    // Get the original element for this image
-    const imageElement = document.querySelectorAll(`img[data-original-src='${imageData.imageURL}']`)[0];
-    // We can use the `Blob` as an image source! We just need to convert it
-    // to an object URL first
-    const objectURL = URL.createObjectURL(imageData.blob)
-
-    // Once the image is loaded, we'll want to do some extra cleanup
-    imageElement.onload = () => {
-        // Let's remove the original `data-src` attribute to make sure we don't
-        // accidentally pass this image to the worker again in the future
-        imageElement.removeAttribute('data-original-src')
-
-        // We'll also revoke the object URL now that it's been used to prevent the
-        // browser from maintaining unnecessary references
-        URL.revokeObjectURL(objectURL)
-    }
-
-    imageElement.setAttribute('src', objectURL)
-});
-
-const TOTAL_IMAGES = 1410;
-const ACTIVE_CLASS = 'active';
+const frameCount = 1400;
 
 const imageURL = (index) => {
     const baseURL = `/images/Daffodil-34826${index.toString().padStart(4, '0')}.jpg`;
@@ -40,43 +15,31 @@ const imageURL = (index) => {
         `/scroll-flower${baseURL}` : `${baseURL}${netlifyParams}`;
 }
 
-const addEmptyImgToPage = index => {
-    const newImg = document.createElement('img');
-    newImg.dataset.imageIndex = index;
-    newImg.dataset.originalSrc = imageURL(index);
-    if(index === 0) {
-        newImg.classList.add(ACTIVE_CLASS);
-    }
-    document.body.appendChild(newImg);
+const currentFrame = index => {
+    return imageURL(index);
 }
 
-const loadImageAtIndex = index => {
-    ImageLoaderWorker.postMessage(imageURL(index));
+const preloadImages = () => {
+    for (let i = 1; i < frameCount; i++) {
+        const img = new Image();
+        img.src = currentFrame(i);
+    }
 };
 
-
-
-for(let i = 0; i <= TOTAL_IMAGES; i += 5) {
-    addEmptyImgToPage(i);
-    loadImageAtIndex(i);
+const img = new Image()
+img.src = currentFrame(1);
+canvas.width=2560;
+canvas.height=1440;
+img.onload=function(){
+    context.drawImage(img, 0, 0);
 }
 
-let retries = 0;
-const updateImage = (index) => {
-    const activeImage = document.querySelector('.active');
-    const imageToUpdate = document.querySelector(`[data-image-index="${index}"]`);
-    if (!imageToUpdate) {
-        retries += 1;
-        return retries < 100 ? updateImage(index + 1) : false;
-    }
-    retries = 0;
-    activeImage.classList.remove(ACTIVE_CLASS);
-    imageToUpdate.classList.add(ACTIVE_CLASS);
+const updateImage = index => {
+    img.src = currentFrame(index);
+    context.drawImage(img, 0, 0);
 }
 
-const frameCount = TOTAL_IMAGES;
 window.addEventListener('scroll', () => {
-    const html = document.querySelector('html');
     const scrollTop = html.scrollTop;
     const maxScrollTop = html.scrollHeight - window.innerHeight;
     const scrollFraction = scrollTop / maxScrollTop;
@@ -85,9 +48,12 @@ window.addEventListener('scroll', () => {
         Math.ceil(scrollFraction * frameCount)
     );
 
-    const everyNthFrame = 5 * Math.round(frameIndex / 5);
-    console.log( 'frameIndex', everyNthFrame);
-
-    requestAnimationFrame(() => updateImage(everyNthFrame));
+    requestAnimationFrame(() => updateImage(frameIndex + 1))
 });
+
+preloadImages()
+
+
+
+
 

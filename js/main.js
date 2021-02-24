@@ -55,8 +55,8 @@ const loadImageAtIndex = index => {
 };
 
 
-
-for(let i = 0; i <= TOTAL_IMAGES; i += 5) {
+const FRAMES_TO_SKIP = window.innerWidth > 400 ? 5 : 10;
+for(let i = 0; i <= TOTAL_IMAGES; i += FRAMES_TO_SKIP) {
     addEmptyImgToPage(i);
     loadImageAtIndex(i);
 }
@@ -85,7 +85,7 @@ window.addEventListener('scroll', () => {
         Math.ceil(scrollFraction * frameCount)
     );
 
-    const everyNthFrame = 5 * Math.round(frameIndex / 5);
+    const everyNthFrame = FRAMES_TO_SKIP * Math.round(frameIndex / FRAMES_TO_SKIP);
     console.log( 'frameIndex', everyNthFrame);
 
     requestAnimationFrame(() => updateImage(everyNthFrame));

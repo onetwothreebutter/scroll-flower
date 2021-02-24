@@ -28,15 +28,16 @@ const preloadImages = () => {
 
 const img = new Image()
 img.src = currentFrame(1);
-canvas.width=2560;
-canvas.height=1440;
+const imageAspect = 2560 / 1440;
+canvas.width = 900;
+canvas.height = 900 / imageAspect;
 img.onload=function(){
-    context.drawImage(img, 0, 0);
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
 }
 
 const updateImage = index => {
     img.src = currentFrame(index);
-    context.drawImage(img, 0, 0);
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
 }
 
 window.addEventListener('scroll', () => {

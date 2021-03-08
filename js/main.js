@@ -72,7 +72,7 @@ const imageLoaderFunction = ()=> {
     }
     upperBound = i + 200;
 };
-const imageLoaderInterval = setInterval(imageLoaderFunction, 10000);
+const imageLoaderInterval = setInterval(imageLoaderFunction, 0);
 
 
 

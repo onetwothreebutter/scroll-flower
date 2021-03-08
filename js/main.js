@@ -30,7 +30,7 @@ ImageLoaderWorker.addEventListener('message', event => {
     imageElement.setAttribute('src', objectURL)
 });
 
-const TOTAL_IMAGES = 110;
+const TOTAL_IMAGES = 1410;
 const ACTIVE_CLASS = 'active';
 
 const imageURL = (index) => {
@@ -56,10 +56,26 @@ const loadImageAtIndex = index => {
 
 
 const FRAMES_TO_SKIP = window.innerWidth > 400 ? 5 : 10;
-for(let i = 0; i <= TOTAL_IMAGES; i += FRAMES_TO_SKIP) {
-    addEmptyImgToPage(i);
-    loadImageAtIndex(i);
-}
+let i = 0;
+let upperBound = i + 200;
+
+const imageLoaderFunction = ()=> {
+    console.log('called image loader function,', i);
+    for(i; i <= upperBound; i += FRAMES_TO_SKIP) {
+        if(upperBound > TOTAL_IMAGES) {
+            console.log('cleared interval');
+            clearInterval(imageLoaderInterval);
+            break;
+        }
+        addEmptyImgToPage(i);
+        loadImageAtIndex(i);
+    }
+    upperBound = i + 200;
+};
+const imageLoaderInterval = setInterval(imageLoaderFunction, 10000);
+
+
+
 
 let retries = 0;
 const updateImage = (index) => {

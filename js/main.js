@@ -33,8 +33,10 @@ ImageLoaderWorker.addEventListener('message', event => {
 const TOTAL_IMAGES = 1410;
 const ACTIVE_CLASS = 'active';
 
+
 const imageURL = (index) => {
-    const baseURL = `/images/Daffodil-34826${index.toString().padStart(4, '0')}.jpg`;
+    const mobileFlag = window.screen.width < 600 ? `mobile/` : 'desktop/';
+    const baseURL = `/images/${mobileFlag}Daffodil-34826${index.toString().padStart(4, '0')}.jpg`;
     const netlifyParams = `?nf_resize=fit&w=1920`;
     return (window.location.href.includes('localhost')) ?
         `/scroll-flower${baseURL}` : `${baseURL}${netlifyParams}`;
@@ -55,7 +57,7 @@ const loadImageAtIndex = index => {
 };
 
 
-const FRAMES_TO_SKIP = window.innerWidth > 400 ? 5 : 10;
+const FRAMES_TO_SKIP = 2;
 for(let i = 0; i <= TOTAL_IMAGES; i += FRAMES_TO_SKIP) {
     addEmptyImgToPage(i);
     loadImageAtIndex(i);

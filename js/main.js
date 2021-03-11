@@ -10,6 +10,10 @@ ImageLoaderWorker.addEventListener('message', event => {
     // Grab the message data from the event
     const imageData = event.data
 
+    if(imageData.error) {
+        console.log("imageData.error", imageData.error);
+    }
+
     // Get the original element for this image
     const imageElement = document.querySelectorAll(`img[data-original-src='${imageData.imageURL}']`)[0];
     // We can use the `Blob` as an image source! We just need to convert it
@@ -36,8 +40,9 @@ const ACTIVE_CLASS = 'active';
 
 const imageURL = (index) => {
     const mobileFlag = window.screen.width < 600 ? `mobile/` : 'desktop/';
+    const imageResize = window.screen.width < 600 ? 818 : 1920;
     const baseURL = `/images/${mobileFlag}Daffodil-34826${index.toString().padStart(4, '0')}.jpg`;
-    const netlifyParams = `?nf_resize=fit&w=1920`;
+    const netlifyParams = `?nf_resize=fit&w=${imageResize}`;
     return (window.location.href.includes('localhost')) ?
         `/scroll-flower${baseURL}` : `${baseURL}${netlifyParams}`;
 }

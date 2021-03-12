@@ -5,7 +5,7 @@
 // Load up the web worker
 const ImageLoaderWorker = new Worker('js/workers/image-loader.worker.js')
 
-
+let imageLoadCount = 0;
 ImageLoaderWorker.addEventListener('message', event => {
     // Grab the message data from the event
     const imageData = event.data
@@ -22,6 +22,8 @@ ImageLoaderWorker.addEventListener('message', event => {
 
     // Once the image is loaded, we'll want to do some extra cleanup
     imageElement.onload = () => {
+        imageLoadCount += 1;
+        console.log('imageLoadCount', imageLoadCount);
         // Let's remove the original `data-src` attribute to make sure we don't
         // accidentally pass this image to the worker again in the future
         imageElement.removeAttribute('data-original-src')
@@ -62,7 +64,7 @@ const loadImageAtIndex = index => {
 };
 
 
-const FRAMES_TO_SKIP = 2;
+const FRAMES_TO_SKIP = 4;
 for(let i = 0; i <= TOTAL_IMAGES; i += FRAMES_TO_SKIP) {
     addEmptyImgToPage(i);
     loadImageAtIndex(i);

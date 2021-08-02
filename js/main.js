@@ -136,50 +136,71 @@ video.addEventListener('play', () => {
     faceapi.matchDimensions(canvas, displaySize)
 
     // ---- observable ----
-    //
-    // const detectFaceObservable = () => {
-    //     return rxjs.defer(async () => {
-    //
-    //         console.log(video);
-    //         const result =  await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-    //         console.log('res', result);
-    //         return result;
-    //     });
-    // }
-    //
-    // const aaaa = detectFaceObservable().subscribe( x=> console.log(x));
 
+    const faceApiCall = () => {
+        return faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+    }
+
+    const detectFace$ = rxjs.from(faceApiCall())
+
+    const getFrameIndex = (fraction) => {
+        return Math.min(
+            frameCount - 1,
+            Math.ceil(fraction * frameCount)
+        );
+    };
+
+    const smileStream$ = rxjs.interval(50).pipe(
+        rxjs.switchMap(_ => detectFace$),
+        rxjs.map(x => x[0].expressions.happy),
+        rxjs.map(x => Math.sqrt(x)),
+        rxjs.scan((acc,x)=>{
+            return [acc.pop(), x];
+        },[0]),
+        rxjs.map(x => [getFrameIndex(x[0]), getFrameIndex(x[1])]),
+        rxjs.concatMap(x => rxjs.range(x[0], x[1])),
+        rxjs.observeOn(rxjs.animationFrameScheduler),
+    );
+
+
+    const aaaa = smileStream$.subscribe( x=> {
+        console.log(x);
+        updateImage(x);
+    });
+
+    // `scan` lets you aggregate values over time
+    // `takeUntil` will cancel an inprogress observable if an event is emitted from the passed in observable
+    //
+
+    // if a smile is detected, then call `updateImage` smoothly from 0 to where the smile is at
+    //
 
     
     // ---- regular ----
 
-    setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
-        const resizedDetections = faceapi.resizeResults(detections, displaySize)
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-        faceapi.draw.drawDetections(canvas, resizedDetections)
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
-        console.time('detectAllFaces');
-        const detectionsWithExpressions = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
-        console.timeEnd('detectAllFaces');
-        console.log("detectionsWithExpressions", detectionsWithExpressions[0].expressions);
-        let scrollFraction = 0;
-        scrollFraction =  Math.cbrt(detectionsWithExpressions[0].expressions.happy);
+    // setInterval(async () => {
+    //     const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+    //     const resizedDetections = faceapi.resizeResults(detections, displaySize)
+    //     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+    //     faceapi.draw.drawDetections(canvas, resizedDetections)
+    //     faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+    //     faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+    //     console.time('detectAllFaces');
+    //     const detectionsWithExpressions = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+    //     console.timeEnd('detectAllFaces');
+    //     console.log("detectionsWithExpressions", detectionsWithExpressions[0].expressions);
+    //     let scrollFraction = 0;
+    //     scrollFraction =  Math.cbrt(detectionsWithExpressions[0].expressions.happy);
         //console.log('srollfraction', scrollFraction);
 
-        const frameIndex = Math.min(
-            frameCount - 1,
-            Math.ceil(scrollFraction * frameCount)
-        );
+
 
 
         //const everyNthFrame = FRAMES_TO_SKIP * Math.round(frameIndex / FRAMES_TO_SKIP);
-        const everyNthFrame = frameIndex;
+        //const everyNthFrame = frameIndex;
 
-        requestAnimationFrame(() => updateImage(everyNthFrame));
+        // requestAnimationFrame(() => updateImage(everyNthFrame));
 
-    }, 100)
-})
+    });
 
 

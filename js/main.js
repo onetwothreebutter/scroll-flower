@@ -100,3 +100,86 @@ window.addEventListener('scroll', () => {
     requestAnimationFrame(() => updateImage(everyNthFrame));
 });
 
+
+Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri('js/face-api/face-models'),
+    faceapi.nets.faceLandmark68Net.loadFromUri('js/face-api/face-models'),
+    faceapi.nets.faceRecognitionNet.loadFromUri('js/face-api/face-models'),
+    faceapi.nets.faceExpressionNet.loadFromUri('js/face-api/face-models')
+]).then(startVideo)
+
+// Prefer camera resolution nearest to 1280x720.
+var constraints = { audio: true, video: { width: 1280, height: 720 } };
+var video = document.querySelector('video');
+
+function startVideo() {
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(mediaStream) {
+            video.srcObject = mediaStream;
+            video.onloadedmetadata = function(e) {
+                video.play();
+            };
+        })
+        .catch(function(err) { console.log(err.name + ": " + err.message); }); // always check for errors at the end.
+
+}
+
+
+video.addEventListener('play', () => {
+    //create the canvas from video element as we have created above
+    const canvas = faceapi.createCanvasFromMedia(video);
+    //append canvas to body or the dom element where you want to append it
+    document.body.append(canvas)
+    // displaySize will help us to match the dimension with video screen and accordingly it will draw our detections
+    // on the streaming video screen
+    const displaySize = { width: video.width, height: video.height }
+    faceapi.matchDimensions(canvas, displaySize)
+
+    // ---- observable ----
+    //
+    // const detectFaceObservable = () => {
+    //     return rxjs.defer(async () => {
+    //
+    //         console.log(video);
+    //         const result =  await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+    //         console.log('res', result);
+    //         return result;
+    //     });
+    // }
+    //
+    // const aaaa = detectFaceObservable().subscribe( x=> console.log(x));
+
+
+    
+    // ---- regular ----
+
+    setInterval(async () => {
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+        const resizedDetections = faceapi.resizeResults(detections, displaySize)
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+        faceapi.draw.drawDetections(canvas, resizedDetections)
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+        faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+        console.time('detectAllFaces');
+        const detectionsWithExpressions = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+        console.timeEnd('detectAllFaces');
+        console.log("detectionsWithExpressions", detectionsWithExpressions[0].expressions);
+        let scrollFraction = 0;
+        scrollFraction =  Math.cbrt(detectionsWithExpressions[0].expressions.happy);
+        //console.log('srollfraction', scrollFraction);
+
+        const frameIndex = Math.min(
+            frameCount - 1,
+            Math.ceil(scrollFraction * frameCount)
+        );
+
+
+        //const everyNthFrame = FRAMES_TO_SKIP * Math.round(frameIndex / FRAMES_TO_SKIP);
+        const everyNthFrame = frameIndex;
+
+        requestAnimationFrame(() => updateImage(everyNthFrame));
+
+    }, 100)
+})
+
+

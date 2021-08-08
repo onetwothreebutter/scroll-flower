@@ -150,22 +150,29 @@ video.addEventListener('play', () => {
         );
     };
 
-    const smileStream$ = rxjs.interval(50).pipe(
+    const smileStream$ = rxjs.interval(1000).pipe(
         rxjs.switchMap(_ => detectFace$),
         rxjs.map(x => x[0].expressions.happy),
         rxjs.map(x => Math.sqrt(x)),
+        rxjs.map(x => getFrameIndex(x)),
         rxjs.scan((acc,x)=>{
             return [acc.pop(), x];
         },[0]),
         rxjs.map(x => [getFrameIndex(x[0]), getFrameIndex(x[1])]),
         rxjs.concatMap(x => rxjs.range(x[0], x[1])),
-        rxjs.observeOn(rxjs.animationFrameScheduler),
+        rxjs.tap(x => console.log(x))
     );
+
+    const animationStream$ = rxjs.interval(0, rxjs.animationFrame)
+        .pipe(
+            rxjs.withLatestFrom(smileStream$)
+        );
 
 
     const aaaa = smileStream$.subscribe( x=> {
-        console.log(x);
-        updateImage(x);
+
+        // console.log(x);
+        // updateImage(x[1]);
     });
 
     // `scan` lets you aggregate values over time

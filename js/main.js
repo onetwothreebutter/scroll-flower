@@ -2,7 +2,7 @@
  * main.js
  */
 import { interpret } from 'https://unpkg.com/xstate@4/dist/xstate.web.js';
-import { personMachine } from "./state_machines/personMachine.js";
+import { faceApiMachine } from "./state_machines/faceApiMachine.js";
 
 // Load up the web worker
 const ImageLoaderWorker = new Worker('js/workers/image-loader.worker.js')
@@ -136,28 +136,9 @@ video.addEventListener('play', () => {
     const displaySize = { width: video.width, height: video.height }
     faceapi.matchDimensions(canvas, displaySize);
 
-
-
-
-    const getFrameIndex = (fraction) => {
-        return Math.min(
-            frameCount - 1,
-            Math.ceil(fraction * frameCount)
-        );
-    };
-
-
-
-
-
-
-
-    // const faceDataService = interpret(personMachine);
-    // faceDataService.start();
-
-    const personService = interpret(personMachine);
-    personService.start();
-    personService.send({type: 'INIT', videoEl: video });
+    const faceApiService = interpret(faceApiMachine);
+    faceApiService.start();
+    faceApiService.send({type: 'INIT', videoEl: video });
 
     // const smileStream$ = rxjs.interval(1000).pipe(
     //     rxjs.switchMap(_ => detectFace$),

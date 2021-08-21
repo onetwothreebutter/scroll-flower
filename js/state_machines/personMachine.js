@@ -1,11 +1,11 @@
-const { from } = rxjs;
-import { createMachine, assign } from 'https://unpkg.com/xstate@4/dist/xstate.web.js';
-import { flowerMachine } from "./flowerMachine.js";
-
+const {from} = rxjs;
+import {createMachine, assign} from 'https://unpkg.com/xstate@4/dist/xstate.web.js';
+import {flowerMachine} from "./flowerMachine.js";
 
 
 const decodeFaceData = assign({
     faceData: (ctx, data) => {
+        console.log('decodeFaceData');
         return decodeFaceData2(data);
     }
 });
@@ -25,15 +25,15 @@ const isApproaching = (context, {data}) => {
 }
 
 const isLeaving = (context, {data}) => {
-    const { faceSize } = decodeFaceData2(data);
-    const { FACE_RANGE } = context;
+    const {faceSize} = decodeFaceData2(data);
+    const {FACE_RANGE} = context;
     console.log('faceSize', faceSize, context.faceData.faceSize);
     return faceSize < context.faceData.faceSize - FACE_RANGE;
 }
 
 const isStill = (context, {data}) => {
-    const { faceSize } = decodeFaceData2(data);
-    const { FACE_RANGE } = context;
+    const {faceSize} = decodeFaceData2(data);
+    const {FACE_RANGE} = context;
     return faceSize <= context.faceData.faceSize + FACE_RANGE &&
         faceSize >= context.faceData.faceSize - FACE_RANGE;
 }
@@ -42,48 +42,20 @@ const isStill = (context, {data}) => {
 export const personMachine = createMachine({
     initial: 'idle',
     context: {
-        videoEl: null,
         faceData: {
             faceSize: 0,
             smilePercent: 0
         },
         FACE_RANGE: 1000,
     },
-    invoke: {
-        src: (ctx, event) => {
-            const faceApiCall = () => {
-                debugger;
-                return faceapi.detectAllFaces(ctx.videoEl, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-            }
-            const detectFace$ = from(faceApiCall());
-            return rxjs.interval(1000).pipe(
-                rxjs.switchMap(_ => detectFace$),
-                rxjs.tap(x => {
-                    console.log('deftect face');
-                }),
-                rxjs.map(x => ({type: 'FACE_DATA', x })));
-        },
-        onDone: 'finished',
-
-    },
     states: {
         idle: {
-            on: {
-                INIT: {
-                    actions: assign({
-                        videoEl:(_, event) => event.videoEl
-                    }),
-                    target: 'running',
-                },
-            },
-        },
-        running: {
-            invoke: {
-                src: {
-                    id: 'flower_machine',
-                    src: flowerMachine,
-                }
-            },
+            // invoke: {
+            //     src: {
+            //         id: 'flowermachine',
+            //         src: flowerMachine,
+            //     }
+            // },
             on: {
                 FACE_DATA: {
                     actions: decodeFaceData,
@@ -91,14 +63,14 @@ export const personMachine = createMachine({
                     cond: (context, {data}) => {
                         console.log('errrrrrson detected');
                         const {faceSize} = decodeFaceData2(data);
-                        return faceSize > 0 ;
+                        return faceSize > 0;
                     },
                 },
             },
         },
         person_detected: {
             type: 'parallel',
-            entry: (context)=> (send({type: 'PERSON_EVENT',context},{to: 'flower_machine'})),
+            entry: (context) => (send({type: 'PERSON_EVENT', context}, {to: 'flower_machine'})),
             states: {
                 movement: {
                     initial: 'standing_still',
@@ -145,8 +117,19 @@ export const personMachine = createMachine({
                     }
                 }
 
-            }
+            },
+            on: {
+                FACE_DATA: {
+                    actions: decodeFaceData,
+                    target: 'finished',
+                    cond: (context, {data}) => {
+                        console.log('errrrrrson detected');
+                        const {faceSize} = decodeFaceData2(data);
+                        return faceSize > 0;
+                    },
+                },
+            },
         },
-        finished: { type: 'final'},
+        finished: {type: 'final'},
     },
 });

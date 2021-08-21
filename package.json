@@ -1,0 +1,25 @@
+{
+  "name": "scroll-flower",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "dependencies": {
+    "prettier": "^2.3.2",
+    "prettier-airbnb-config": "^1.0.0",
+    "netlify-cli": "^6.0.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onetwothreebutter/scroll-flower.git"
+  },
+  "author": "Eric Johnson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/onetwothreebutter/scroll-flower/issues"
+  },
+  "homepage": "https://github.com/onetwothreebutter/scroll-flower#readme"
+}

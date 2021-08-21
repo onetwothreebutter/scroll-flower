@@ -1,6 +1,8 @@
 /*
  * main.js
  */
+import { interpret } from 'https://unpkg.com/xstate@4/dist/xstate.web.js';
+import { personMachine } from "./state_machines/personMachine.js";
 
 // Load up the web worker
 const ImageLoaderWorker = new Worker('js/workers/image-loader.worker.js')
@@ -23,7 +25,6 @@ ImageLoaderWorker.addEventListener('message', event => {
     // Once the image is loaded, we'll want to do some extra cleanup
     imageElement.onload = () => {
         imageLoadCount += 1;
-        console.log('imageLoadCount', imageLoadCount);
         // Let's remove the original `data-src` attribute to make sure we don't
         // accidentally pass this image to the worker again in the future
         imageElement.removeAttribute('data-original-src')
@@ -133,15 +134,10 @@ video.addEventListener('play', () => {
     // displaySize will help us to match the dimension with video screen and accordingly it will draw our detections
     // on the streaming video screen
     const displaySize = { width: video.width, height: video.height }
-    faceapi.matchDimensions(canvas, displaySize)
+    faceapi.matchDimensions(canvas, displaySize);
 
-    // ---- observable ----
 
-    const faceApiCall = () => {
-        return faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-    }
 
-    const detectFace$ = rxjs.from(faceApiCall())
 
     const getFrameIndex = (fraction) => {
         return Math.min(
@@ -150,23 +146,37 @@ video.addEventListener('play', () => {
         );
     };
 
-    const smileStream$ = rxjs.interval(50).pipe(
-        rxjs.switchMap(_ => detectFace$),
-        rxjs.map(x => x[0].expressions.happy),
-        rxjs.map(x => Math.sqrt(x)),
-        rxjs.scan((acc,x)=>{
-            return [acc.pop(), x];
-        },[0]),
-        rxjs.map(x => [getFrameIndex(x[0]), getFrameIndex(x[1])]),
-        rxjs.concatMap(x => rxjs.range(x[0], x[1])),
-        rxjs.observeOn(rxjs.animationFrameScheduler),
-    );
 
 
-    const aaaa = smileStream$.subscribe( x=> {
-        console.log(x);
-        updateImage(x);
-    });
+
+
+
+
+    // const faceDataService = interpret(personMachine);
+    // faceDataService.start();
+
+    const personService = interpret(personMachine);
+    personService.start();
+    personService.send({type: 'INIT', videoEl: video });
+
+    // const smileStream$ = rxjs.interval(1000).pipe(
+    //     rxjs.switchMap(_ => detectFace$),
+    //     rxjs.map(x => x[0]),
+    // ).subscribe( x => {
+    //     const currentState = faceDataService.send({type:'FACE_DATA', data: x});
+    // });
+
+
+
+    // const animationStream$ = rxjs.interval(0, rxjs.animationFrame)
+    //     .pipe(
+    //         //rxjs.withLatestFrom(smileStream$)
+    //         rxjs.scan((acc, _) => {
+    //             return acc + 3;
+    //         }, 0)
+    //     );
+
+
 
     // `scan` lets you aggregate values over time
     // `takeUntil` will cancel an inprogress observable if an event is emitted from the passed in observable

@@ -37,7 +37,7 @@ ImageLoaderWorker.addEventListener('message', event => {
     imageElement.setAttribute('src', objectURL)
 });
 
-const TOTAL_IMAGES = 1410;
+const TOTAL_IMAGES = 1;
 const ACTIVE_CLASS = 'active';
 
 

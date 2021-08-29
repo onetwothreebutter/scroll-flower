@@ -10,10 +10,15 @@ const decodeFaceData = assign({
     }
 });
 
-const decodeFaceData2 = (faceData) => {
+const decodeFaceData2 = (faceData = {}) => {
+    const {
+        alignedRect,
+        expressions
+    } = faceData
+
     return {
-        faceSize: faceData.alignedRect?.box?.area || 0,
-        smilePercent: faceData.expressions?.happy || 0,
+        faceSize: alignedRect ? alignedRect.box.area : 0,
+        smilePercent: expressions ? expressions.happy : 0,
     }
 };
 
@@ -50,86 +55,86 @@ export const personMachine = createMachine({
     },
     states: {
         idle: {
-            // invoke: {
-            //     src: {
-            //         id: 'flowermachine',
-            //         src: flowerMachine,
-            //     }
-            // },
-            on: {
-                FACE_DATA: {
-                    actions: decodeFaceData,
-                    target: 'person_detected',
-                    cond: (context, {data}) => {
-                        console.log('errrrrrson detected');
-                        const {faceSize} = decodeFaceData2(data);
-                        return faceSize > 0;
-                    },
+            invoke: {
+                id: 'flowermachine',
+                src: () => {
+                    console.log('personMachine invoked');
                 },
-            },
-        },
-        person_detected: {
-            type: 'parallel',
-            entry: (context) => (send({type: 'PERSON_EVENT', context}, {to: 'flower_machine'})),
-            states: {
-                movement: {
-                    initial: 'standing_still',
-                    states: {
-                        standing_still: {
-                            on: {
-                                FACE_DATA: [{
-                                    target: 'approaching',
-                                    actions: decodeFaceData,
-                                    cond: isApproaching,
-                                },
-                                    {
-                                        target: 'leaving',
-                                        actions: decodeFaceData,
-                                        cond: isLeaving,
-                                    }]
-                            },
-                        },
-                        approaching: {
-                            on: {
-                                FACE_DATA: [{
-                                    target: 'standing_still',
-                                    actions: decodeFaceData,
-                                    cond: isStill,
-                                }]
-                            }
-                        },
-                        leaving: {
-                            on: {
-                                FACE_DATA: [{
-                                    target: 'standing_still',
-                                    actions: decodeFaceData,
-                                    cond: isStill,
-                                }]
-                            }
-                        }
-                    },
-                },
-                facial_expression: {
-                    initial: 'neutral',
-                    states: {
-                        neutral: {},
-                        smiling: {},
-                    }
-                }
-
             },
             on: {
                 FACE_DATA: {
                     actions: decodeFaceData,
                     target: 'finished',
-                    cond: (context, {data}) => {
-                        console.log('errrrrrson detected');
-                        const {faceSize} = decodeFaceData2(data);
+                    cond: (context, data) => {
+                        console.log('in personMachin', data);
+                        const {faceData} = decodeFaceData2(data);
                         return faceSize > 0;
                     },
                 },
             },
         },
+        // person_detected: {
+        //     type: 'parallel',
+        //     entry: (context) => (send({type: 'PERSON_EVENT', context}, {to: 'flower_machine'})),
+        //     states: {
+        //         movement: {
+        //             initial: 'standing_still',
+        //             states: {
+        //                 standing_still: {
+        //                     on: {
+        //                         FACE_DATA: [{
+        //                             target: 'approaching',
+        //                             actions: decodeFaceData,
+        //                             cond: isApproaching,
+        //                         },
+        //                             {
+        //                                 target: 'leaving',
+        //                                 actions: decodeFaceData,
+        //                                 cond: isLeaving,
+        //                             }]
+        //                     },
+        //                 },
+        //                 approaching: {
+        //                     on: {
+        //                         FACE_DATA: [{
+        //                             target: 'standing_still',
+        //                             actions: decodeFaceData,
+        //                             cond: isStill,
+        //                         }]
+        //                     }
+        //                 },
+        //                 leaving: {
+        //                     on: {
+        //                         FACE_DATA: [{
+        //                             target: 'standing_still',
+        //                             actions: decodeFaceData,
+        //                             cond: isStill,
+        //                         }]
+        //                     }
+        //                 }
+        //             },
+        //         },
+        //         facial_expression: {
+        //             initial: 'neutral',
+        //             states: {
+        //                 neutral: {},
+        //                 smiling: {},
+        //             }
+        //         }
+        //
+        //     },
+        //     on: {
+        //         FACE_DATA: {
+        //             actions: decodeFaceData,
+        //             target: 'finished',
+        //             cond: (context, {data}) => {
+        //                 console.log('errrrrrson detected');
+        //                 const {faceSize} = decodeFaceData2(data);
+        //                 return faceSize > 0;
+        //             },
+        //         },
+        //     },
+        // },
         finished: {type: 'final'},
     },
 });
